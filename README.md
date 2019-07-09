@@ -9,4 +9,4 @@ docker run \
 -e "ADMIN=root" \
 -e 'ROOMS_ARRAY=!DgvjtOljKujDBrxyHk:matrix.org' \
 -e "TIME=1 day ago" \
-mchus/matrix-synapse-cleanup
+mchus/mxdbmainte:groundhog
