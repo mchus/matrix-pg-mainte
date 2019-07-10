@@ -14,7 +14,7 @@
 # add this user as admin in your home server:
 #ADMIN="@you_admin_username:$DOMAIN"
 
-API_URL="${DOMAIN}:8008/_matrix/client/r0"
+API_URL="${DOMAIN}/_matrix/client/r0"
 
 ###################################################################################################
 #choose the rooms to prune old messages from (add a free comment at the end)
