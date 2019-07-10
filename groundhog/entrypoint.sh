@@ -11,10 +11,25 @@
 ###################################################################################################
 # add this user as admin in your home server:
 #DOMAIN=yourserver.tld
-# add this user as admin in your home server:
-#ADMIN="@you_admin_username:$DOMAIN"
 
+#ADMIN="@you_admin_username:$DOMAIN"
 API_URL="${DOMAIN}/_matrix/client/r0"
+ADMIN_URL="${DOMAIN}/_synapse/admin/v1"
+UNIX_TIMESTAMP=$(date +%s%3N --date="$TIME")
+AUTH="Authorization: Bearer $TOKEN"
+SLEEP=0
+
+# this will really delete local events, so the messages in the room really disappear unless they are restored by remote federation
+post_data()
+{
+  cat <<EOF
+{
+  "delete_local_events":"true",
+  "purge_up_to_ts":$UNIX_TIMESTAMP
+}
+EOF
+}
+
 
 ###################################################################################################
 #choose the rooms to prune old messages from (add a free comment at the end)
@@ -44,7 +59,7 @@ API_URL="${DOMAIN}/_matrix/client/r0"
 
 # creates a timestamp from the given time string:
 #UNIX_TIMESTAMP=$(date +%s%3N --date='TZ="UTC+2" '"$TIME")
-UNIX_TIMESTAMP=$(date +%s%3N --date="$TIME")
+
 
 # ALTERNATIVELY:
 # prune all messages that are older than 1000 messages ago:
@@ -61,70 +76,37 @@ UNIX_TIMESTAMP=$(date +%s%3N --date="$TIME")
 # psql -A -t --dbname=synapse -c "UPDATE users SET admin=1 WHERE name LIKE '$ADMIN'"
 
 
-###################################################################################################
-# database function
-###################################################################################################
-sql (){
-  # for sqlite3:
-  #sqlite3 homeserver.db "pragma busy_timeout=20000;$1" | awk '{print $2}'
-  # for postgres:
-  psql -A -t -U ${POSTGRES_USER} -h ${POSTGRES_HOST} --dbname=${POSTGRES_DB} -c "$1" | grep -v 'Pager'
-}
+echo "###################################################################################################"
+echo " join rooms"
+echo "###################################################################################################"
+for ROOM in "${ROOMS_ARRAY[@]}"; do
+    ROOM=${ROOM%#*}
+    curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/join"
 
-###################################################################################################
-# get an access token
-###################################################################################################
-# for example externally by watching Riot in your browser's network inspector
-# or internally on the server locally, use this:
-TOKEN=$(sql "SELECT token FROM access_tokens WHERE user_id='$ADMIN' ORDER BY id DESC LIMIT 1")
-AUTH="Authorization: Bearer $TOKEN"
+done
 
-###################################################################################################
-# check, if your TOKEN works. For example this works:
-###################################################################################################
-# $ curl --header "$AUTH" "$API_URL/rooms/$ROOM/state/m.room.power_levels"
-
-###################################################################################################
-# finally start pruning the room:
-###################################################################################################
-POSTDATA='{"delete_local_events":"true"}' # this will really delete local events, so the messages in the room really disappear unless they are restored by remote federation
+echo "###################################################################################################"
+echo " start pruning the room"
+echo "###################################################################################################"
 
 for ROOM in "${ROOMS_ARRAY[@]}"; do
     echo "########################################### $(date) ################# "
-    echo "pruning room: $ROOM ..."
     ROOM=${ROOM%#*}
-    #set -x
-    echo "check for alias in db..."
-    # for postgres:
-    sql "SELECT * FROM room_aliases WHERE room_id='$ROOM'"
-    echo "get event..."
-    # for postgres:
-    EVENT_ID=$(sql "SELECT event_id FROM events WHERE type='m.room.message' AND received_ts<'$UNIX_TIMESTAMP' AND room_id='$ROOM' ORDER BY received_ts DESC LIMIT 1;")
-    if [ "$EVENT_ID" == "" ]; then
-      echo "no event $TIME"
-    else
-      echo "event: $EVENT_ID"
-      SLEEP=2
-      set -x
-      # call purge
-      OUT=$(curl --header "$AUTH" -s -d $POSTDATA POST "$API_URL/admin/purge_history/$ROOM/$EVENT_ID")
-      PURGE_ID=$(echo "$OUT" |grep purge_id|cut -d'"' -f4 )
-      if [ "$PURGE_ID" == "" ]; then
-        # probably the history purge is already in progress for $ROOM
-        : "continuing with next room"
-      else
+    echo "## pruning room: $ROOM ..."
+    echo "###################################################################################################"
+    OUT=$(curl --header "$AUTH" -s -d "$(post_data)" POST "$ADMIN_URL/purge_history/$ROOM")
+    PURGE_ID=$(echo "$OUT" |grep purge_id|cut -d'"' -f4 )
+    echo $PURGE_ID
         while : ; do
           # get status of purge and sleep longer each time if still active
           sleep $SLEEP
-          STATUS=$(curl --header "$AUTH" -s GET "$API_URL/admin/purge_history_status/$PURGE_ID" |grep status|cut -d'"' -f4)
+          STATUS=$(curl --header "$AUTH" -s GET "$ADMIN_URL/purge_history_status/$PURGE_ID" |grep status|cut -d'"' -f4)
           : "$ROOM --> Status: $STATUS"
+          echo $STATUS
           [[ "$STATUS" == "active" ]] || break
           SLEEP=$((SLEEP + 1))
         done
-      fi
-      set +x
       sleep 1
-    fi
 done
 
 
@@ -140,7 +122,17 @@ done
 # This could be set, so you don't need to prune every time after deleting some rows:
 # $ sqlite3 homeserver.db "PRAGMA auto_vacuum = FULL;"
 # be cautious, it could make the database somewhat slow if there are a lot of deletions
-
-echo "########################################### Sleeping 1 hour before exit #################"
-sleep 3600
+#echo "###################################################################################################"
+#echo " leave rooms"
+#echo "###################################################################################################"
+#for ROOM in "${ROOMS_ARRAY[@]}"; do
+#    ROOM=${ROOM%#*}
+#    curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -d "{}" "$API_URL/rooms/$ROOM/leave"
+#done
+echo "Sleeping"
+for i in {0..360}
+do
+echo -n "#"
+sleep 1
+done
 exit

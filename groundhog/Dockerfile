@@ -1,5 +1,5 @@
 FROM alpine:latest
-RUN apk --no-cache add postgresql-client curl coreutils bash
+RUN apk --no-cache add curl coreutils bash
 
 
 COPY entrypoint.sh /groundhog/
