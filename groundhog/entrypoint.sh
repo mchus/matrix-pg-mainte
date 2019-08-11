@@ -17,7 +17,7 @@ API_URL="${DOMAIN}/_matrix/client/r0"
 ADMIN_URL="${DOMAIN}/_synapse/admin/v1"
 UNIX_TIMESTAMP=$(date +%s%3N --date="$TIME")
 AUTH="Authorization: Bearer $TOKEN"
-SLEEP=0
+SLEEP=3
 
 # this will really delete local events, so the messages in the room really disappear unless they are restored by remote federation
 post_data()
@@ -81,13 +81,12 @@ echo " join rooms"
 echo "+-------------------------------------------------------------------------------------------------+"
 
 for ROOM in "${ROOMS_ARRAY[@]}"; do
-    ROOM=${ROOM%#*}
     echo "$ROOM"
     echo "+-------------------------------------------------------------------------------------------------+"
     curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/join"
-    curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/state/m.room.name"
+    curl --header "$AUTH" -X GET --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/state/m.room.name"
     echo "+-------------------------------------------------------------------------------------------------+"
-    sleep 1
+    sleep $SLEEP
 done
 echo "+=================================================================================================+"
 
@@ -97,7 +96,6 @@ echo "+-------------------------------------------------------------------------
 echo " $(date) "
 echo "+-------------------------------------------------------------------------------------------------+"
 for ROOM in "${ROOMS_ARRAY[@]}"; do
-    ROOM=${ROOM%#*}
     echo "+-------------------------------------------------------------------------------------------------+"
     echo "$ROOM"
     OUT=$(curl --header "$AUTH" -s -d "$(post_data)" POST "$ADMIN_URL/purge_history/$ROOM")
@@ -115,7 +113,7 @@ for ROOM in "${ROOMS_ARRAY[@]}"; do
           SLEEP=$((SLEEP + 1))
           echo "+-------------------------------------------------------------------------------------------------+"
         done
-      sleep 1
+        sleep $SLEEP
 echo "+=================================================================================================+"
 
 
