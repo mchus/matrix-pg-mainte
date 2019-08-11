@@ -82,8 +82,11 @@ echo "+-------------------------------------------------------------------------
 
 for ROOM in "${ROOMS_ARRAY[@]}"; do
     ROOM=${ROOM%#*}
+    echo "$ROOM"
+    echo "+-------------------------------------------------------------------------------------------------+"
     curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/join"
     curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/state/m.room.power_levels"
+    echo "+-------------------------------------------------------------------------------------------------+"
 done
 echo "+=================================================================================================+"
 
