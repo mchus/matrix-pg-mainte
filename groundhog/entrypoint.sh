@@ -74,6 +74,7 @@ EOF
 # make the admin user a server admin in the database with
 ###################################################################################################
 # psql -A -t --dbname=synapse -c "UPDATE users SET admin=1 WHERE name LIKE '$ADMIN'"
+# curl -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{"type":"m.login.password", "user":"$ADMIN", "password":"$PASSWORD"}' '$API_URL/login'
 
 
 echo "###################################################################################################"
@@ -81,8 +82,8 @@ echo " join rooms"
 echo "###################################################################################################"
 for ROOM in "${ROOMS_ARRAY[@]}"; do
     ROOM=${ROOM%#*}
-    OUT=$(curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/join")
-    echo $OUT
+#    curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/join"
+    curl --header "$AUTH" "$API_URL/rooms/$ROOM/state/m.room.power_levels"
 done
 
 echo "###################################################################################################"
@@ -95,6 +96,7 @@ for ROOM in "${ROOMS_ARRAY[@]}"; do
     ROOM=${ROOM%#*}
     echo "$ROOM"
     OUT=$(curl --header "$AUTH" -s -d "$(post_data)" POST "$ADMIN_URL/purge_history/$ROOM")
+    echo "$OUT"
     PURGE_ID=$(echo "$OUT" |grep purge_id|cut -d'"' -f4 )
     echo $PURGE_ID
         while : ; do
