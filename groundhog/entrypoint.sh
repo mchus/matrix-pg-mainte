@@ -85,7 +85,7 @@ for ROOM in "${ROOMS_ARRAY[@]}"; do
     echo "$ROOM"
     echo "+-------------------------------------------------------------------------------------------------+"
     curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/join"
-    curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/state/m.room.power_levels"
+    curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/state/m.room.name"
     echo "+-------------------------------------------------------------------------------------------------+"
 done
 echo "+=================================================================================================+"
@@ -103,8 +103,6 @@ for ROOM in "${ROOMS_ARRAY[@]}"; do
     echo "$ROOM"
     OUT=$(curl --header "$AUTH" -s -d "$(post_data)" POST "$ADMIN_URL/purge_history/$ROOM")
     echo "+-------------------------------------------------------------------------------------------------+"
-    echo "$OUT"
-    echo "+-------------------------------------------------------------------------------------------------+"
 
     PURGE_ID=$(echo "$OUT" |grep purge_id|cut -d'"' -f4 )
     echo $PURGE_ID
@@ -116,6 +114,7 @@ for ROOM in "${ROOMS_ARRAY[@]}"; do
           echo $STATUS
           [[ "$STATUS" == "active" ]] || break
           SLEEP=$((SLEEP + 1))
+          echo "+-------------------------------------------------------------------------------------------------+"
         done
       sleep 1
 echo "+=================================================================================================+"
