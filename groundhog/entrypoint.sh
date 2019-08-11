@@ -77,27 +77,18 @@ EOF
 # curl -X POST --header 'Content-Type: application/json' --header 'Accept: application/json' -d '{"type":"m.login.password", "user":"$ADMIN", "password":"$PASSWORD"}' '$API_URL/login'
 
 echo "+=================================================================================================+"
-echo " join rooms"
-echo "+-------------------------------------------------------------------------------------------------+"
-
-for ROOM in "${ROOMS_ARRAY[@]}"; do
-    echo "$ROOM"
-    echo "+-------------------------------------------------------------------------------------------------+"
-    curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/join"
-    curl --header "$AUTH" -X GET --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/state/m.room.name"
-    echo "+-------------------------------------------------------------------------------------------------+"
-    sleep $SLEEP
-done
-echo "+=================================================================================================+"
-
-echo "+=================================================================================================+"
-echo " start pruning the room"
-echo "+-------------------------------------------------------------------------------------------------+"
 echo " $(date) "
 echo "+-------------------------------------------------------------------------------------------------+"
 for ROOM in "${ROOMS_ARRAY[@]}"; do
     echo "+-------------------------------------------------------------------------------------------------+"
-    echo "$ROOM"
+    echo "+ Join $ROOM"
+    echo "+-------------------------------------------------------------------------------------------------+"
+    curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/join"
+    echo "+-------------------------------------------------------------------------------------------------+"
+    echo "+ Testing $ROOM"
+    curl --header "$AUTH" -X GET --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/state/m.room.name"
+    echo "+-------------------------------------------------------------------------------------------------+"
+    echo "+ Purge $ROOM"
     OUT=$(curl --header "$AUTH" -s -d "$(post_data)" POST "$ADMIN_URL/purge_history/$ROOM")
     echo "+-------------------------------------------------------------------------------------------------+"
 
