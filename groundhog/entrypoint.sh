@@ -16,6 +16,7 @@
 API_URL="${DOMAIN}/_matrix/client/r0"
 ADMIN_URL="${DOMAIN}/_synapse/admin/v1"
 UNIX_TIMESTAMP=$(date +%s%3N --date="$TIME")
+PURGE_DATE=$(date -d @"$UNIX_TIMESTAMP")
 AUTH="Authorization: Bearer $TOKEN"
 SLEEP=3
 
@@ -47,7 +48,7 @@ echo "+ Testing $ROOM"
 curl --header "$AUTH" -X GET --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/state/m.room.name"
 echo "+-------------------------------------------------------------------------------------------------+"
 
-echo "+ Purge $ROOM"
+echo "+ Purge $ROOM till $PURGE_DATE"
 OUT=$(curl --header "$AUTH" -s -d "$(post_data)" POST "$ADMIN_URL/purge_history/$ROOM")
 echo "+-------------------------------------------------------------------------------------------------+"
 
@@ -78,7 +79,7 @@ for i in {0..60}
 do
   for i in {0..60}
   do
-    echo -n "#"
+    echo -n "$i "
     sleep 1
   done
   echo
