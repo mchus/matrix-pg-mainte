@@ -87,6 +87,7 @@ for ROOM in "${ROOMS_ARRAY[@]}"; do
     curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/join"
     curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/state/m.room.name"
     echo "+-------------------------------------------------------------------------------------------------+"
+    sleep 1
 done
 echo "+=================================================================================================+"
 
@@ -95,8 +96,6 @@ echo " start pruning the room"
 echo "+-------------------------------------------------------------------------------------------------+"
 echo " $(date) "
 echo "+-------------------------------------------------------------------------------------------------+"
-
-echo "## pruning rooms:"
 for ROOM in "${ROOMS_ARRAY[@]}"; do
     ROOM=${ROOM%#*}
     echo "+-------------------------------------------------------------------------------------------------+"
