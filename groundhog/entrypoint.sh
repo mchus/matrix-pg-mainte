@@ -81,19 +81,19 @@ echo " join rooms"
 echo "###################################################################################################"
 for ROOM in "${ROOMS_ARRAY[@]}"; do
     ROOM=${ROOM%#*}
-    curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/join"
-
+    OUT=$(curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -s -d "{}" "$API_URL/rooms/$ROOM/join")
+    echo $OUT
 done
 
 echo "###################################################################################################"
 echo " start pruning the room"
 echo "###################################################################################################"
 
+echo "########################################### $(date) ################# "
+echo "## pruning rooms:"
 for ROOM in "${ROOMS_ARRAY[@]}"; do
-    echo "########################################### $(date) ################# "
     ROOM=${ROOM%#*}
-    echo "## pruning room: $ROOM ..."
-    echo "###################################################################################################"
+    echo "$ROOM"
     OUT=$(curl --header "$AUTH" -s -d "$(post_data)" POST "$ADMIN_URL/purge_history/$ROOM")
     PURGE_ID=$(echo "$OUT" |grep purge_id|cut -d'"' -f4 )
     echo $PURGE_ID
@@ -107,6 +107,8 @@ for ROOM in "${ROOMS_ARRAY[@]}"; do
           SLEEP=$((SLEEP + 1))
         done
       sleep 1
+echo "###################################################################################################"
+
 done
 
 
