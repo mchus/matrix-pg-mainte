@@ -16,7 +16,7 @@
 API_URL="${DOMAIN}/_matrix/client/r0"
 ADMIN_URL="${DOMAIN}/_synapse/admin/v1"
 UNIX_TIMESTAMP=$(date +%s%3N --date="$TIME")
-PURGE_DATE=$(date -d @"$UNIX_TIMESTAMP")
+PURGE_DATE=$(date -d @$(($UNIX_TIMESTAMP/1000)))
 AUTH="Authorization: Bearer $TOKEN"
 SLEEP=3
 
