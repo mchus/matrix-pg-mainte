@@ -74,14 +74,4 @@ echo "+=========================================================================
 #    ROOM=${ROOM%#*}
 #    curl --header "$AUTH" -X POST --header "Content-Type: application/json" --header "Accept: application/json" -d "{}" "$API_URL/rooms/$ROOM/leave"
 #done
-echo "Sleeping"
-for i in {0..60}
-do
-  for i in {0..60}
-  do
-    echo -n "$i "
-    sleep 1
-  done
-  echo
-done
 exit
